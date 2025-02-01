@@ -11,7 +11,7 @@ memepool = "3ssRqnuLbw9yhWj5Mw3eQoyJNscDbNSv6evDXWh5UJu1"
 url = "https://api.apr.dev"
 
 [provider]
-cluster = "Localnet"
+cluster = "Devnet"
 wallet = "~/.config/solana/id.json"
 
 [scripts]
