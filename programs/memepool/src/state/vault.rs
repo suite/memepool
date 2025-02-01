@@ -9,5 +9,6 @@ use anchor_lang::prelude::*;
 #[account]
 #[derive(InitSpace)]
 pub struct Vault {
+    pub meme_bump: u8,
     pub bump: u8,
 }

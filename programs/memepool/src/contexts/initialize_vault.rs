@@ -25,7 +25,7 @@ pub struct InitializeVault<'info> {
         payer=admin,
         seeds=[b"meme".as_ref()], // Do I really need to pass in vault.key().as_ref() here? (omitted for now)
         bump,
-        mint::decimals=6,
+        mint::decimals=9,
         mint::authority=vault,
     )]
     pub meme_mint: Account<'info, Mint>,
@@ -37,6 +37,7 @@ pub struct InitializeVault<'info> {
 impl<'info> InitializeVault<'info> {
     pub fn initialize_vault(&mut self, bumps: &InitializeVaultBumps) -> Result<()> {
         self.vault.set_inner(Vault {
+            meme_bump: bumps.meme_mint,
             bump: bumps.vault
         });
 

@@ -1,9 +1,10 @@
 use anchor_lang::prelude::*;
 
-declare_id!("3ssRqnuLbw9yhWj5Mw3eQoyJNscDbNSv6evDXWh5UJu1");
+declare_id!("4DkcsX8ypqXChJvqUTyVdtL9463KyTT3RBEUHLkTM6Ls");
 
 mod state;
 mod contexts;
+mod errors;
 
 pub use contexts::*;
 
@@ -35,5 +36,9 @@ pub mod memepool {
 
     pub fn initialize_vault(ctx: Context<InitializeVault>) -> Result<()> {
         ctx.accounts.initialize_vault(&ctx.bumps)
+    }
+
+    pub fn deposit_vault(ctx: Context<DepositVault>, deposit_lamports: u64) -> Result<()> {
+        ctx.accounts.deposit_vault(deposit_lamports)
     }
 }
