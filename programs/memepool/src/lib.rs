@@ -4,7 +4,8 @@ declare_id!("4DkcsX8ypqXChJvqUTyVdtL9463KyTT3RBEUHLkTM6Ls");
 
 mod state;
 mod contexts;
-mod errors;
+pub mod errors;
+pub mod utils;
 
 pub use contexts::*;
 
@@ -40,5 +41,9 @@ pub mod memepool {
 
     pub fn deposit_vault(ctx: Context<DepositVault>, deposit_lamports: u64) -> Result<()> {
         ctx.accounts.deposit_vault(deposit_lamports)
+    }
+
+    pub fn withdraw_vault(ctx: Context<WithdrawVault>, withdraw_meme_amt: u64) -> Result<()> {
+        ctx.accounts.withdraw_vault(withdraw_meme_amt)
     }
 }

@@ -1,7 +1,7 @@
 use anchor_lang::{prelude::*, solana_program::{program::invoke, system_instruction::transfer}};
 use anchor_spl::{associated_token::AssociatedToken, token::{mint_to, Mint, MintTo, Token, TokenAccount}};
 
-use crate::{errors::VaultError, state::Vault};
+use crate::{state::Vault, utils::{calculate_meme_from_sol, get_vault_supply}};
 
 #[derive(Accounts)]
 pub struct DepositVault<'info> {
@@ -37,18 +37,19 @@ pub struct DepositVault<'info> {
 }
 
 impl<'info> DepositVault<'info> {
-    pub fn deposit_vault(&self, deposit_lamports: u64) -> Result<()> {
-        // Mint $MEME
+    // sol to meme
+    pub fn deposit_vault(&self, deposit_lamports: u64) -> Result<()> {   
         let meme_supply = self.meme_mint.supply;
+        
+        let vault_supply = get_vault_supply(
+            self.vault.get_lamports(),
+            &self.rent,
+            8 + Vault::INIT_SPACE,
+        )?;
 
-        // vault_supply = vault_lamports - (rent cost for vault account)
-        let vault_supply = self.vault.get_lamports();
-        let rent_exempt_minimum = self.rent.minimum_balance(8+Vault::INIT_SPACE); // does space=size?\
+        let meme_amt = calculate_meme_from_sol(deposit_lamports, meme_supply, vault_supply)?;
 
-        let vault_supply = vault_supply
-            .checked_sub(rent_exempt_minimum)
-            .ok_or(VaultError::InvalidVault)?;
-
+        // Transfer SOL from user to vault
         let ix = transfer(&self.depositer.key(),&self.vault.key(), deposit_lamports);
 
         invoke(&ix, &[
@@ -57,15 +58,7 @@ impl<'info> DepositVault<'info> {
             self.system_program.to_account_info(),
         ])?;
 
-        let meme_amt: u64 = if meme_supply == 0 {
-            deposit_lamports
-        } else {
-            deposit_lamports
-                .checked_mul(meme_supply)
-                .and_then(|v| v.checked_div(vault_supply))
-                .ok_or(VaultError::InvalidMEMEAmount)?
-        };
-
+        // Mint $MEME
         let cpi_program = self.token_program.to_account_info();
         let cpi_accounts = MintTo {
             mint: self.meme_mint.to_account_info(),

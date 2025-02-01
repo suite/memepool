@@ -16,38 +16,57 @@ describe("memepool", () => {
   console.log("Vault pda:", vault.toString());
   console.log("$MEME mint:", memeMint.toString());
 
-  it("Initializes Vault", async () => {
-    // Add your test here.
-      const tx = await program.methods.initializeVault()
-        .accountsPartial({
-          vault,
-          admin: provider.wallet.publicKey,
-          memeMint,
-          systemProgram: anchor.web3.SystemProgram.programId,
-          tokenProgram: TOKEN_PROGRAM_ID,
-        }).rpc();
+  // it("Initializes Vault", async () => {
+  //   // Add your test here.
+  //     const tx = await program.methods.initializeVault()
+  //       .accountsPartial({
+  //         vault,
+  //         admin: provider.wallet.publicKey,
+  //         memeMint,
+  //         systemProgram: anchor.web3.SystemProgram.programId,
+  //         tokenProgram: TOKEN_PROGRAM_ID,
+  //       }).rpc();
 
-    console.log("Vault initialized.");
-    console.log("Your transaction signature", tx);
-  });
+  //   console.log("Vault initialized.");
+  //   console.log("Your transaction signature", tx);
+  // });
 
-  it("Deposits SOL into vault", async () => {
-    const deposit = new BN(250_000_000); // 0.25 SOL
-    const depositerMemeAta = getAssociatedTokenAddressSync(memeMint, provider.wallet.publicKey);
+  // it("Deposits SOL into vault", async () => {
+  //   const deposit = new BN(250_000_000); // 0.25 SOL
+  //   const depositerMemeAta = getAssociatedTokenAddressSync(memeMint, provider.wallet.publicKey);
     
-    const tx = await program.methods.depositVault(deposit)
+  //   const tx = await program.methods.depositVault(deposit)
+  //     .accountsPartial({
+  //       depositer: provider.wallet.publicKey,
+  //       vault,
+  //       memeMint,
+  //       depositerMemeAta,
+  //       systemProgram: anchor.web3.SystemProgram.programId,
+  //       tokenProgram: TOKEN_PROGRAM_ID,
+  //       associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+  //       rent: anchor.web3.SYSVAR_RENT_PUBKEY,
+  //     }).rpc();
+
+  //   console.log("Deposited SOL.");
+  //   console.log("Your transaction signature", tx);
+  // });
+
+  it("Withdraws SOL using MEME", async () => {
+    const withdraw = new BN(250_000_000); // 0.25 $MEME
+    const withdrawerMemeAta = getAssociatedTokenAddressSync(memeMint, provider.wallet.publicKey);
+    
+    const tx = await program.methods.withdrawVault(withdraw)
       .accountsPartial({
-        depositer: provider.wallet.publicKey,
+        withdrawer: provider.wallet.publicKey,
         vault,
         memeMint,
-        depositerMemeAta,
+        withdrawerMemeAta,
         systemProgram: anchor.web3.SystemProgram.programId,
         tokenProgram: TOKEN_PROGRAM_ID,
-        associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
         rent: anchor.web3.SYSVAR_RENT_PUBKEY,
       }).rpc();
 
-    console.log("Deposited SOL.");
-    console.log("Your transaction signature", tx);
+      console.log("Withdrew SOL.");
+      console.log("Your transaction signature", tx);
   });
 });
