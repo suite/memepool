@@ -1,4 +1,4 @@
-use anchor_lang::{prelude::*, solana_program::{program::invoke_signed, system_instruction::transfer}, system_program::{self, Transfer}};
+use anchor_lang::prelude::*;
 use anchor_spl::token::{burn, Burn, Mint, Token, TokenAccount};
 
 use crate::{state::Vault, utils::{calculate_sol_from_meme, get_vault_supply}};
