@@ -1,4 +1,4 @@
-use anchor_lang::{prelude::*, solana_program::{program::invoke, system_instruction::transfer}};
+use anchor_lang::{prelude::*, system_program::{self, transfer, Transfer}};
 use anchor_spl::{associated_token::AssociatedToken, token::{mint_to, Mint, MintTo, Token, TokenAccount}};
 
 use crate::{state::Vault, utils::{calculate_meme_from_sol, get_vault_supply}};
@@ -50,13 +50,15 @@ impl<'info> DepositVault<'info> {
         let meme_amt = calculate_meme_from_sol(deposit_lamports, meme_supply, vault_supply)?;
 
         // Transfer SOL from user to vault
-        let ix = transfer(&self.depositer.key(),&self.vault.key(), deposit_lamports);
+        let cpi_program = self.system_program.to_account_info();
+        let cpi_accounts = Transfer {
+            from: self.depositer.to_account_info(),
+            to: self.vault.to_account_info(),
+        };
 
-        invoke(&ix, &[
-            self.depositer.to_account_info(),
-            self.vault.to_account_info(),
-            self.system_program.to_account_info(),
-        ])?;
+        let cpi_ctx = CpiContext::new(cpi_program, cpi_accounts);
+        
+        system_program::transfer(cpi_ctx, deposit_lamports)?;
 
         // Mint $MEME
         let cpi_program = self.token_program.to_account_info();
