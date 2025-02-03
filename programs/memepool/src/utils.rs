@@ -28,6 +28,7 @@ pub fn calculate_sol_from_meme(
         .ok_or(VaultError::InvalidSOLAmount.into())
 }
 
+// TODO: account for sending sol tx fee?
 pub fn get_vault_supply(total_lamports: u64, rent: &Rent, space: usize) -> Result<u64> {
     let rent_exempt_minimum = rent.minimum_balance(space);
     total_lamports

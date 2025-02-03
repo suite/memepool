@@ -37,6 +37,8 @@ pub struct WithdrawVault<'info> {
 impl<'info> WithdrawVault<'info> {
     // meme to sol
     pub fn withdraw_vault(&self, withdraw_meme_amt: u64) -> Result<()> {
+        // TODO: might not have SOL (locked up in lp tokens)
+        // call method to free up sol
         let meme_supply = self.meme_mint.supply;
         
         let vault_supply = get_vault_supply(

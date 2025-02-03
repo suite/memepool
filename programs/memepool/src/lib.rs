@@ -6,6 +6,7 @@ mod state;
 mod contexts;
 pub mod errors;
 pub mod utils;
+pub mod constants;
 
 pub use contexts::*;
 
@@ -45,5 +46,9 @@ pub mod memepool {
 
     pub fn withdraw_vault(ctx: Context<WithdrawVault>, withdraw_meme_amt: u64) -> Result<()> {
         ctx.accounts.withdraw_vault(withdraw_meme_amt)
+    }
+
+    pub fn deposit_lp(ctx: Context<DepositLp>) -> Result<()> {
+        ctx.accounts.deposit_lp()
     }
 }
