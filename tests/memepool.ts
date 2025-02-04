@@ -1,33 +1,13 @@
 import * as anchor from "@coral-xyz/anchor";
 import { BN, Program } from "@coral-xyz/anchor";
 import { Memepool } from "../target/types/memepool";
-import { TOKEN_PROGRAM_ID } from "@coral-xyz/anchor/dist/cjs/utils/token";
-import { ASSOCIATED_TOKEN_PROGRAM_ID, getAssociatedTokenAddressSync } from "@solana/spl-token";
+import { ASSOCIATED_PROGRAM_ID, TOKEN_PROGRAM_ID } from "@coral-xyz/anchor/dist/cjs/utils/token";
+import { ASSOCIATED_TOKEN_PROGRAM_ID, getAssociatedTokenAddressSync, TOKEN_2022_PROGRAM_ID } from "@solana/spl-token";
 import * as fs from "fs";
 import { PublicKey } from "@solana/web3.js";
-import { initSdk, txVersion } from "./raydium/config";
+import { getAuthAddress, getPoolLpMintAddress, initSdk, txVersion } from "./raydium/config";
 import { DEVNET_PROGRAM_ID, getCpmmPdaAmmConfigId } from "@raydium-io/raydium-sdk-v2";
 
-// https://github.com/raydium-io/raydium-cp-swap/blob/cfdb70a8ca9ea62bb5c304d4492ac0fc371ae8ce/tests/utils/pda.ts#L6C8-L6C78
-const POOL_SEED = Buffer.from(anchor.utils.bytes.utf8.encode("pool"));
-// https://github.com/raydium-io/raydium-cp-swap/blob/master/tests/utils/pda.ts#L77-L93
-function getPoolAddress(
-  ammConfig: PublicKey,
-  tokenMint0: PublicKey,
-  tokenMint1: PublicKey,
-  programId: PublicKey
-): [PublicKey, number] {
-  const [address, bump] = PublicKey.findProgramAddressSync(
-    [
-      POOL_SEED,
-      ammConfig.toBuffer(),
-      tokenMint0.toBuffer(),
-      tokenMint1.toBuffer(),
-    ],
-    programId
-  );
-  return [address, bump];
-}
 
 describe("memepool", () => {
   // Configure the client to use the local cluster.
@@ -46,9 +26,12 @@ describe("memepool", () => {
   const vault = anchor.web3.PublicKey.findProgramAddressSync([Buffer.from("vault")], program.programId)[0];
   const memeMint = anchor.web3.PublicKey.findProgramAddressSync([Buffer.from("meme")], program.programId)[0];
   
+  const cpSwapProgram = new PublicKey("CPMDWBwJDtYax9qW7AyRuVC19Cc4L4Vcy4n2BHAbHkCW");
+
   console.log("Vault pda:", vault.toString());
   console.log("$MEME mint:", memeMint.toString());
   console.log("Secondary wallet pubkey:", secondaryKp.publicKey.toString());
+  console.log("Raydium CP Swap Program:", cpSwapProgram.toString());
 
   it("Initializes Vault", async () => {
       const tx = await program.methods.initializeVault()
@@ -106,18 +89,69 @@ describe("memepool", () => {
   it("Deposits into LP", async() => {
     // SOL/MEMEPOOLTEST lp
     const poolAddress = new PublicKey("2zQi1M8QrJpXxLWNyBuec3N7hNG1x7DmChctYYeE5HLT");
+    const raydium = await initSdk({ loadToken: true });
+    const poolInfo = await raydium.cpmm.getRpcPoolInfo(poolAddress.toString());
 
-    // const poolState = await program.account.poolState.fetch(poolAddress);
+    console.log("Pool info", poolInfo);
 
-    const tx = await program.methods.depositLp()
+    const lpTokenAmount = new BN(10);
+    const maximumToken0Amount = new BN(10);
+    const maximumToken1Amount = new BN(10);
+
+    const [authority] = getAuthAddress(cpSwapProgram); // CONSTANT FOR ALL POOLS
+
+    const [lpMintAddress] = getPoolLpMintAddress(
+      poolAddress,
+      cpSwapProgram
+    );
+    
+    const [ownerLpToken] = PublicKey.findProgramAddressSync(
+      [
+        vault.toBuffer(),
+        TOKEN_PROGRAM_ID.toBuffer(),
+        lpMintAddress.toBuffer(),
+      ],
+      ASSOCIATED_PROGRAM_ID
+    );
+
+    const ownerToken0 = getAssociatedTokenAddressSync(
+      poolInfo.mintA,
+      vault,
+      true,
+      poolInfo.mintProgramA
+    );
+
+    const ownerToken1 = getAssociatedTokenAddressSync(
+      poolInfo.mintB,
+      vault,
+      true,
+      poolInfo.mintProgramB
+    );
+
+    const tx = await program.methods.depositLp(lpTokenAmount, maximumToken0Amount, maximumToken1Amount)
       .accountsPartial({
+        vault,
         aggregator: secondaryKp.publicKey,
-        poolState: poolAddress
+        cpSwapProgram,
+        authority,
+        poolState: poolAddress,
+        ownerLpToken,
+        token0Account: ownerToken0,
+        token1Account: ownerToken1,
+        token0Vault: poolInfo.vaultA,
+        token1Vault: poolInfo.vaultB,
+        tokenProgram: TOKEN_PROGRAM_ID,
+        tokenProgram2022: TOKEN_2022_PROGRAM_ID,
+        vault0Mint: poolInfo.mintA,
+        vault1Mint: poolInfo.mintB,
+        lpMint: poolInfo.mintLp,
+        systemProgram: anchor.web3.SystemProgram.programId,
+        associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
       })
       .signers([secondaryKp])
       .rpc();
       
-      console.log("Called DepositLp.");
+      console.log("Called DepositLp. new");
       console.log("Your transaction signature", tx);
   });
 
