@@ -1,4 +1,4 @@
-use anchor_lang::{prelude::*, system_program::{self, transfer, Transfer}};
+use anchor_lang::{prelude::*, system_program::{self, Transfer}};
 use anchor_spl::{associated_token::AssociatedToken, token::{mint_to, Mint, MintTo, Token, TokenAccount}};
 
 use crate::{state::Vault, utils::{calculate_meme_from_sol, get_vault_supply}};
@@ -41,6 +41,8 @@ impl<'info> DepositVault<'info> {
     pub fn deposit_vault(&self, deposit_lamports: u64) -> Result<()> {   
         let meme_supply = self.meme_mint.supply;
         
+        // TODO: self.vault.get_lamports() may not be correct (locked in lps)
+        // Add another field to vault account
         let vault_supply = get_vault_supply(
             self.vault.get_lamports(),
             &self.rent,

@@ -4,7 +4,7 @@ use anchor_spl::{
 };
 use raydium_cpmm_cpi::{cpi, program::RaydiumCpmm, states::PoolState};
 
-use crate::{constants::AGGREGATOR_BOT, state::Vault};
+use crate::{constants::AGGREGATOR_BOT, state::{Vault, VaultPool}};
 
 // 
 // Deposit into LP for a given pair/raydium id
@@ -13,7 +13,15 @@ use crate::{constants::AGGREGATOR_BOT, state::Vault};
 
 #[derive(Accounts)]
 pub struct DepositLp<'info> {
-    // Vault will pay for all txs
+    #[account(
+        init_if_needed,
+        payer=aggregator,
+        seeds=[b"vault_pool", pool_state.key().as_ref()],
+        bump,
+        space=8+VaultPool::INIT_SPACE,
+    )]
+    pub vault_pool: Account<'info, VaultPool>,
+
     #[account(
         mut,
         seeds=[b"vault".as_ref()],
@@ -43,10 +51,10 @@ pub struct DepositLp<'info> {
     /// Owner lp token account
     #[account(
         init_if_needed,
-        payer=aggregator, // TODO: should be vault
+        payer=aggregator,
         associated_token::mint = lp_mint,
         associated_token::authority = vault
-    )] // here
+    )]
     pub owner_lp_token: Box<InterfaceAccount<'info, TokenAccount>>,
 
     /// The payer's token account for token_0
@@ -110,7 +118,7 @@ pub struct DepositLp<'info> {
 
 
 impl<'info> DepositLp<'info> {
-    pub fn deposit_lp(&self, lp_token_amount: u64, maximum_token_0_amount: u64, maximum_token_1_amount: u64) -> Result<()> {
+    pub fn deposit_lp(&mut self, lp_token_amount: u64, maximum_token_0_amount: u64, maximum_token_1_amount: u64, bumps: &DepositLpBumps) -> Result<()> {
         let cpi_program = self.cp_swap_program.to_account_info();
         let cpi_accounts = cpi::accounts::Deposit {
             owner: self.vault.to_account_info(), // must be signer?
@@ -137,6 +145,15 @@ impl<'info> DepositLp<'info> {
         let cpi_context = CpiContext::new_with_signer(cpi_program, cpi_accounts,signer_seeds);
         cpi::deposit(cpi_context, lp_token_amount, maximum_token_0_amount, maximum_token_1_amount)?;
 
+
+        // TODO: Keep track of deposits in vault
+        // keep track of vault_pool
+        // TODO: Don't need to do this everytime
+        self.vault_pool.set_inner(VaultPool {
+            bump: bumps.vault_pool,
+            pool_id: self.pool_state.key(),
+        });
+        
         Ok(())
     }
 }

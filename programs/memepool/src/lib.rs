@@ -49,6 +49,6 @@ pub mod memepool {
     }
 
     pub fn deposit_lp(ctx: Context<DepositLp>,  lp_token_amount: u64, maximum_token_0_amount: u64, maximum_token_1_amount: u64) -> Result<()> {
-        ctx.accounts.deposit_lp(lp_token_amount, maximum_token_0_amount, maximum_token_1_amount)
+        ctx.accounts.deposit_lp(lp_token_amount, maximum_token_0_amount, maximum_token_1_amount, &ctx.bumps)
     }
 }

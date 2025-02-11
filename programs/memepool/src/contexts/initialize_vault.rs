@@ -1,7 +1,7 @@
 use anchor_lang::prelude::*;
 use anchor_spl::token::{Mint, Token};
 
-use crate::state::vault::Vault;
+use crate::state::{vault::Vault, VaultPool};
 
 #[derive(Accounts)]
 pub struct InitializeVault<'info> {

@@ -1,7 +1,9 @@
-use anchor_lang::prelude::*;
+use anchor_lang::{prelude::*, solana_program::system_program};
 use anchor_spl::token::{burn, Burn, Mint, Token, TokenAccount};
+use raydium_cpmm_cpi::program::RaydiumCpmm;
 
 use crate::{state::Vault, utils::{calculate_sol_from_meme, get_vault_supply}};
+
 
 #[derive(Accounts)]
 pub struct WithdrawVault<'info> {
@@ -29,16 +31,18 @@ pub struct WithdrawVault<'info> {
     )]
     pub withdrawer_meme_ata: Account<'info, TokenAccount>,
 
+    pub cp_swap_program: Program<'info, RaydiumCpmm>,
     pub system_program: Program<'info, System>,
     pub token_program: Program<'info, Token>,
     pub rent: Sysvar<'info, Rent>,
 }
 
+
+// TODO: replace with request_withdraw_vault
+// And implement finalize_withdraw_vault
 impl<'info> WithdrawVault<'info> {
     // meme to sol
     pub fn withdraw_vault(&self, withdraw_meme_amt: u64) -> Result<()> {
-        // TODO: might not have SOL (locked up in lp tokens)
-        // call method to free up sol
         let meme_supply = self.meme_mint.supply;
         
         let vault_supply = get_vault_supply(
