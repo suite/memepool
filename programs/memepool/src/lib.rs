@@ -30,6 +30,11 @@ Aggregator world
  - harvest lp
  - withdraw 
 
+ TODO: 
+ Change naming conventions
+ deposit_lp -> lp_deposit 
+ etc.
+
 */
 
 #[program]
@@ -44,8 +49,12 @@ pub mod memepool {
         ctx.accounts.deposit_vault(deposit_lamports)
     }
 
-    pub fn withdraw_vault(ctx: Context<WithdrawVault>, withdraw_meme_amt: u64) -> Result<()> {
-        ctx.accounts.withdraw_vault(withdraw_meme_amt)
+    pub fn request_withdraw_vault(ctx: Context<RequestWithdrawVault>, meme_amt: u64) -> Result<()> {
+        ctx.accounts.request_withdraw_vault(meme_amt, &ctx.bumps)
+    }
+
+    pub fn finalize_withdraw_vault(ctx: Context<FinalizeWithdrawVault>) -> Result<()> {
+        ctx.accounts.finalize_withdraw_vault()
     }
 
     pub fn deposit_lp(ctx: Context<DepositLp>,  lp_token_amount: u64, maximum_token_0_amount: u64, maximum_token_1_amount: u64) -> Result<()> {

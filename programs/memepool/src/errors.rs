@@ -10,4 +10,6 @@ pub enum VaultError {
     InvalidVault,
     #[msg("Vault OUT OF SOL")]
     VaultOOS,
+    #[msg("Withdraw Request status not ready")]
+    WithdrawRequestNotReady,
 }
