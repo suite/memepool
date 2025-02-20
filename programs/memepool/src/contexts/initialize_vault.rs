@@ -1,7 +1,7 @@
 use anchor_lang::prelude::*;
 use anchor_spl::token::{Mint, Token};
 
-use crate::state::{vault::Vault, VaultPool};
+use crate::state::vault::Vault;
 
 #[derive(Accounts)]
 pub struct InitializeVault<'info> {
@@ -38,7 +38,8 @@ impl<'info> InitializeVault<'info> {
     pub fn initialize_vault(&mut self, bumps: &InitializeVaultBumps) -> Result<()> {
         self.vault.set_inner(Vault {
             meme_bump: bumps.meme_mint,
-            bump: bumps.vault
+            bump: bumps.vault,
+            lamports: 0
         });
 
         Ok(())
