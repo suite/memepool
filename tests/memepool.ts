@@ -7,6 +7,7 @@ import * as fs from "fs";
 import { PublicKey } from "@solana/web3.js";
 import { getAuthAddress, getPoolLpMintAddress, initSdk, txVersion } from "./raydium/config";
 import { DEVNET_PROGRAM_ID, getCpmmPdaAmmConfigId } from "@raydium-io/raydium-sdk-v2";
+import { getPortfolioAccount, getPortfolioCounter, getWithdrawRequestAccount } from "./utils/portfolio";
 
 
 describe("memepool", () => {
@@ -34,7 +35,7 @@ describe("memepool", () => {
   console.log("Raydium CP Swap Program:", cpSwapProgram.toString());
 
   it("Initializes Vault", async () => {
-      const tx = await program.methods.initializeVault()
+      const tx = await program.methods.vaultInitialize()
         .accountsPartial({
           vault,
           admin: provider.wallet.publicKey,
@@ -51,7 +52,7 @@ describe("memepool", () => {
     const deposit = new BN(250_000_000); // 0.25 SOL
     const depositerMemeAta = getAssociatedTokenAddressSync(memeMint, provider.wallet.publicKey);
     
-    const tx = await program.methods.depositVault(deposit)
+    const tx = await program.methods.vaultDeposit(deposit)
       .accountsPartial({
         depositer: provider.wallet.publicKey,
         vault,
@@ -60,29 +61,78 @@ describe("memepool", () => {
         systemProgram: anchor.web3.SystemProgram.programId,
         tokenProgram: TOKEN_PROGRAM_ID,
         associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
-        rent: anchor.web3.SYSVAR_RENT_PUBKEY,
       }).rpc();
 
     console.log("Deposited SOL.");
     console.log("Your transaction signature", tx);
   });
 
-  it("Withdraws SOL using MEME", async () => {
+  it("Creates withdraw request", async () => {
     const withdraw = new BN(250_000_000); // 0.25 $MEME
     const withdrawerMemeAta = getAssociatedTokenAddressSync(memeMint, provider.wallet.publicKey);
     
-    const tx = await program.methods.withdrawVault(withdraw)
+    // Get users Portfolio Account
+    const portfolio = getPortfolioAccount(provider.publicKey);
+    // Get portfolio counter
+    let counter: BN = await getPortfolioCounter(portfolio);
+    //  Get new Withdraw Request account
+    const withdrawRequest = getWithdrawRequestAccount(provider.publicKey, counter);
+    
+    const tx = await program.methods.vaultRequestWithdraw(withdraw)
       .accountsPartial({
         withdrawer: provider.wallet.publicKey,
         vault,
         memeMint,
         withdrawerMemeAta,
+        portfolio,
+        withdrawRequest,
         systemProgram: anchor.web3.SystemProgram.programId,
         tokenProgram: TOKEN_PROGRAM_ID,
-        rent: anchor.web3.SYSVAR_RENT_PUBKEY,
       }).rpc();
 
-      console.log("Withdrew SOL.");
+      console.log("Created withdraw request.");
+      console.log("Your transaction signature", tx);
+  });
+
+  it("Finalizes withdraw request", async () => {
+    // Get users Portfolio Account
+    const portfolio = getPortfolioAccount(provider.publicKey);
+    // Get portfolio counter
+    let counter: BN = await getPortfolioCounter(portfolio);
+    //  Get recent Withdraw Request account
+    const withdrawRequest = getWithdrawRequestAccount(provider.publicKey, counter.subn(1));
+
+    const tx = await program.methods.vaultFinalizeWithdraw()
+      .accountsPartial({
+        withdrawer: provider.wallet.publicKey,
+        withdrawRequest,
+        systemProgram: anchor.web3.SystemProgram.programId,
+      }).rpc();
+
+      console.log("Finalized withdraw request.");
+      console.log("Your transaction signature", tx);
+  });
+
+  it("Fills withdraw request", async () => {
+    const fill = new BN(250_000_000); // 0.25 SOL
+
+    // Get users Portfolio Account
+    const portfolio = getPortfolioAccount(provider.publicKey);
+    // Get portfolio counter
+    let counter: BN = await getPortfolioCounter(portfolio);
+    //  Get recent Withdraw Request account
+    const withdrawRequest = getWithdrawRequestAccount(provider.publicKey, counter.subn(1));
+
+    const tx = await program.methods.vaultFillWithdraw(fill)
+      .accountsPartial({
+        aggregator: secondaryKp.publicKey,
+        withdrawer: provider.wallet.publicKey,
+        withdrawRequest,
+        vault,
+        systemProgram: TOKEN_PROGRAM_ID,
+      }).rpc();
+
+      console.log("Filled withdraw request.");
       console.log("Your transaction signature", tx);
   });
 
@@ -128,7 +178,7 @@ describe("memepool", () => {
       poolInfo.mintProgramB
     );
 
-    const tx = await program.methods.depositLp(lpTokenAmount, maximumToken0Amount, maximumToken1Amount)
+    const tx = await program.methods.lpDeposit(lpTokenAmount, maximumToken0Amount, maximumToken1Amount)
       .accountsPartial({
         vault,
         aggregator: secondaryKp.publicKey,
