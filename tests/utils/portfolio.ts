@@ -3,15 +3,13 @@ import { BN, Program } from "@coral-xyz/anchor";
 import { PublicKey } from '@solana/web3.js';
 import { Memepool } from "../../target/types/memepool";
 
-const program = anchor.workspace.Memepool as Program<Memepool>;
-
-export const getPortfolioAccount = (user: PublicKey) => {
+export const getPortfolioAccount = (user: PublicKey, programId: PublicKey) => {
     return anchor.web3.PublicKey.findProgramAddressSync([
             Buffer.from("portfolio"), user.toBuffer()], 
-            program.programId)[0];
+            programId)[0];
 }
 
-export const getPortfolioCounter = async (portfolio: PublicKey) => {
+export const getPortfolioCounter = async (portfolio: PublicKey, program: anchor.Program<Memepool>) => {
     let counter: BN = new BN(0);
     try {
       const portfolioAccount = await program.account.portfolio.fetch(portfolio);
@@ -21,8 +19,8 @@ export const getPortfolioCounter = async (portfolio: PublicKey) => {
     return counter;
 }
 
-export const getWithdrawRequestAccount = (user: PublicKey, counter: BN) => {
+export const getWithdrawRequestAccount = (user: PublicKey, counter: BN, programId: PublicKey) => {
     return anchor.web3.PublicKey.findProgramAddressSync([
           Buffer.from("withdraw_request"), user.toBuffer(), counter.toArrayLike(Buffer, "le", 8)], 
-          program.programId)[0];
+          programId)[0];
 }
