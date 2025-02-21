@@ -8,6 +8,7 @@ pub struct VaultFillWithdraw<'info> {
     #[account(mut, address=AGGREGATOR_BOT)]
     pub aggregator: Signer<'info>,
 
+    /// CHECK: This is the withdrawer’s public key, only used for PDA seeds, no data validation needed.
     #[account()]
     pub withdrawer: AccountInfo<'info>,
 
