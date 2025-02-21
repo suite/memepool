@@ -4,7 +4,7 @@ use anchor_spl::token::{burn, Burn, Mint, Token, TokenAccount};
 use crate::state::{Portfolio, Vault, WithdrawRequest};
 
 #[derive(Accounts)]
-pub struct RequestWithdrawVault<'info> {
+pub struct VaultRequestWithdraw<'info> {
     #[account(mut)]
     pub withdrawer: Signer<'info>,
 
@@ -51,8 +51,8 @@ pub struct RequestWithdrawVault<'info> {
     pub system_program: Program<'info, System>,
 }
 
-impl<'info> RequestWithdrawVault<'info> {
-    pub fn vault_request_withdraw(&mut self, meme_amt: u64, bumps: &RequestWithdrawVaultBumps) -> Result<()> {
+impl<'info> VaultRequestWithdraw<'info> {
+    pub fn vault_request_withdraw(&mut self, meme_amt: u64, bumps: &VaultRequestWithdrawBumps) -> Result<()> {
         // Burn withdrawer's $MEME
         let cpi_program = self.token_program.to_account_info();
         let cpi_accounts = Burn {

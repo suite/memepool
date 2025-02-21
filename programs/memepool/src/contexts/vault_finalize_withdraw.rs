@@ -3,7 +3,7 @@ use anchor_lang::prelude::*;
 use crate::{errors::VaultError, state::WithdrawRequest};
 
 #[derive(Accounts)]
-pub struct FinalizeWithdrawVault<'info> {
+pub struct VaultFinalizeWithdraw<'info> {
     #[account(mut)]
     pub withdrawer: Signer<'info>,
 
@@ -19,7 +19,7 @@ pub struct FinalizeWithdrawVault<'info> {
     pub system_program: Program<'info, System>,
 }
 
-impl<'info> FinalizeWithdrawVault<'info> {
+impl<'info> VaultFinalizeWithdraw<'info> {
     pub fn vault_finalize_withdraw(&self) -> Result<()> {
         // Withdraw Request Account status must be 1 (ready)
         require!(

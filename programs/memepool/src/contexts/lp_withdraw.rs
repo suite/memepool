@@ -4,7 +4,7 @@ use raydium_cpmm_cpi::{cpi, program::RaydiumCpmm};
 use crate::{constants::AGGREGATOR_BOT, state::{Vault, VaultPool}};
 
 #[derive(Accounts)] 
-pub struct WithdrawLp<'info> {
+pub struct LpWithdraw<'info> {
     // Vault will pay for all txs (TODO doesnt right now, fix )
     #[account(
         mut,
@@ -24,7 +24,7 @@ pub struct WithdrawLp<'info> {
     pub system_program: Program<'info, System>,
 }
 
-impl<'info> WithdrawLp<'info> {
+impl<'info> LpWithdraw<'info> {
     
     pub fn withdraw_lp(&self, amount: u64) -> Result<()> {
         // Fill out similar to deposit_lp.rs

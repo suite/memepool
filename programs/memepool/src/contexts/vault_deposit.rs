@@ -4,7 +4,7 @@ use anchor_spl::{associated_token::AssociatedToken, token::{mint_to, Mint, MintT
 use crate::{state::Vault, utils::calculate_meme_from_sol};
 
 #[derive(Accounts)]
-pub struct DepositVault<'info> {
+pub struct VaultDeposit<'info> {
     #[account(mut)]
     pub depositer: Signer<'info>,
 
@@ -35,7 +35,7 @@ pub struct DepositVault<'info> {
     pub associated_token_program: Program<'info, AssociatedToken>,
 }
 
-impl<'info> DepositVault<'info> {
+impl<'info> VaultDeposit<'info> {
     // $SOL to $MEME
     pub fn vault_deposit(&mut self, deposit_lamports: u64) -> Result<()> {
         // Calculate amount of $MEME to mint

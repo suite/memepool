@@ -4,7 +4,7 @@ use anchor_spl::token::{Mint, Token};
 use crate::state::vault::Vault;
 
 #[derive(Accounts)]
-pub struct InitializeVault<'info> {
+pub struct VaultInitialize<'info> {
     #[account(mut)]
     pub admin: Signer<'info>,
 
@@ -34,8 +34,8 @@ pub struct InitializeVault<'info> {
     pub token_program: Program<'info, Token>,
 }
 
-impl<'info> InitializeVault<'info> {
-    pub fn vault_initialize(&mut self, bumps: &InitializeVaultBumps) -> Result<()> {
+impl<'info> VaultInitialize<'info> {
+    pub fn vault_initialize(&mut self, bumps: &VaultInitializeBumps) -> Result<()> {
         self.vault.set_inner(Vault {
             meme_bump: bumps.meme_mint,
             bump: bumps.vault,
