@@ -4,14 +4,14 @@
 resolution = true
 skip-lint = false
 
-[programs.localnet]
-memepool = "4DkcsX8ypqXChJvqUTyVdtL9463KyTT3RBEUHLkTM6Ls"
+[programs.devnet]
+memepool = "4eis4y3ejgjeLypXTYSCxGnqNcsHYbp3hCboThgEvtUP"
 
 [registry]
 url = "https://api.apr.dev"
 
 [provider]
-cluster = "Devnet"
+cluster = "devnet"
 wallet = "~/.config/solana/id.json"
 
 [scripts]
