@@ -21,11 +21,11 @@ The meme coin market is thriving, but navigating it is often risky and time-cons
 build:
 anchor build -- --features devnet 
 
-test:
-anchor test --skip-build --skip-deploy
-
 deploy:
 anchor deploy
+
+test:
+anchor test --skip-build --skip-deploy
 ```
 
 ## Simplified User Flow
