@@ -118,7 +118,7 @@ pub struct DepositLp<'info> {
 
 
 impl<'info> DepositLp<'info> {
-    pub fn deposit_lp(&mut self, lp_token_amount: u64, maximum_token_0_amount: u64, maximum_token_1_amount: u64, bumps: &DepositLpBumps) -> Result<()> {
+    pub fn lp_deposit(&mut self, lp_token_amount: u64, maximum_token_0_amount: u64, maximum_token_1_amount: u64, bumps: &DepositLpBumps) -> Result<()> {
         let cpi_program = self.cp_swap_program.to_account_info();
         let cpi_accounts = cpi::accounts::Deposit {
             owner: self.vault.to_account_info(), // must be signer?

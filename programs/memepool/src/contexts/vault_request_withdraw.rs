@@ -52,7 +52,7 @@ pub struct RequestWithdrawVault<'info> {
 }
 
 impl<'info> RequestWithdrawVault<'info> {
-    pub fn request_withdraw_vault(&mut self, meme_amt: u64, bumps: &RequestWithdrawVaultBumps) -> Result<()> {
+    pub fn vault_request_withdraw(&mut self, meme_amt: u64, bumps: &RequestWithdrawVaultBumps) -> Result<()> {
         // Burn withdrawer's $MEME
         let cpi_program = self.token_program.to_account_info();
         let cpi_accounts = Burn {

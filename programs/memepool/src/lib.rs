@@ -41,23 +41,23 @@ Aggregator world
 pub mod memepool {
     use super::*;
 
-    pub fn initialize_vault(ctx: Context<InitializeVault>) -> Result<()> {
-        ctx.accounts.initialize_vault(&ctx.bumps)
+    pub fn vault_initialize(ctx: Context<InitializeVault>) -> Result<()> {
+        ctx.accounts.vault_initialize(&ctx.bumps)
     }
 
-    pub fn deposit_vault(ctx: Context<DepositVault>, deposit_lamports: u64) -> Result<()> {
-        ctx.accounts.deposit_vault(deposit_lamports)
+    pub fn vault_deposit(ctx: Context<DepositVault>, deposit_lamports: u64) -> Result<()> {
+        ctx.accounts.vault_deposit(deposit_lamports)
     }
 
-    pub fn request_withdraw_vault(ctx: Context<RequestWithdrawVault>, meme_amt: u64) -> Result<()> {
-        ctx.accounts.request_withdraw_vault(meme_amt, &ctx.bumps)
+    pub fn vault_request_withdraw(ctx: Context<RequestWithdrawVault>, meme_amt: u64) -> Result<()> {
+        ctx.accounts.vault_request_withdraw(meme_amt, &ctx.bumps)
     }
 
-    pub fn finalize_withdraw_vault(ctx: Context<FinalizeWithdrawVault>) -> Result<()> {
-        ctx.accounts.finalize_withdraw_vault()
+    pub fn vault_finalize_withdraw(ctx: Context<FinalizeWithdrawVault>) -> Result<()> {
+        ctx.accounts.vault_finalize_withdraw()
     }
 
-    pub fn deposit_lp(ctx: Context<DepositLp>,  lp_token_amount: u64, maximum_token_0_amount: u64, maximum_token_1_amount: u64) -> Result<()> {
-        ctx.accounts.deposit_lp(lp_token_amount, maximum_token_0_amount, maximum_token_1_amount, &ctx.bumps)
+    pub fn lp_deposit(ctx: Context<DepositLp>,  lp_token_amount: u64, maximum_token_0_amount: u64, maximum_token_1_amount: u64) -> Result<()> {
+        ctx.accounts.lp_deposit(lp_token_amount, maximum_token_0_amount, maximum_token_1_amount, &ctx.bumps)
     }
 }

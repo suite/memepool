@@ -35,7 +35,7 @@ pub struct InitializeVault<'info> {
 }
 
 impl<'info> InitializeVault<'info> {
-    pub fn initialize_vault(&mut self, bumps: &InitializeVaultBumps) -> Result<()> {
+    pub fn vault_initialize(&mut self, bumps: &InitializeVaultBumps) -> Result<()> {
         self.vault.set_inner(Vault {
             meme_bump: bumps.meme_mint,
             bump: bumps.vault,

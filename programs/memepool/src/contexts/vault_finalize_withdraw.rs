@@ -20,7 +20,7 @@ pub struct FinalizeWithdrawVault<'info> {
 }
 
 impl<'info> FinalizeWithdrawVault<'info> {
-    pub fn finalize_withdraw_vault(&self) -> Result<()> {
+    pub fn vault_finalize_withdraw(&self) -> Result<()> {
         // Withdraw Request Account status must be 1 (ready)
         require!(
             self.withdraw_request.status == 1,

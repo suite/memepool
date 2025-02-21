@@ -37,7 +37,7 @@ pub struct DepositVault<'info> {
 
 impl<'info> DepositVault<'info> {
     // $SOL to $MEME
-    pub fn deposit_vault(&mut self, deposit_lamports: u64) -> Result<()> {
+    pub fn vault_deposit(&mut self, deposit_lamports: u64) -> Result<()> {
         // Calculate amount of $MEME to mint
         let meme_supply = self.meme_mint.supply;
         let vault_lamports = self.vault.lamports;
