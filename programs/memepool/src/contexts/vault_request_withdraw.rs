@@ -43,7 +43,7 @@ pub struct VaultRequestWithdraw<'info> {
         payer=withdrawer,
         seeds=[b"withdraw_request", withdrawer.key().as_ref(), &portfolio.counter.to_le_bytes()],
         bump,
-        space=8+Portfolio::INIT_SPACE
+        space=8+WithdrawRequest::INIT_SPACE
     )]
     pub withdraw_request: Account<'info, WithdrawRequest>,
     
