@@ -52,6 +52,10 @@ pub mod memepool {
         ctx.accounts.vault_finalize_withdraw()
     }
 
+    pub fn vault_fill_withdraw(ctx: Context<VaultFillWithdraw>, fill_lamports: u64) -> Result<()> {
+        ctx.accounts.vault_fill_withdraw(fill_lamports)
+    }
+
     pub fn lp_deposit(ctx: Context<LpDeposit>,  lp_token_amount: u64, maximum_token_0_amount: u64, maximum_token_1_amount: u64) -> Result<()> {
         ctx.accounts.lp_deposit(lp_token_amount, maximum_token_0_amount, maximum_token_1_amount, &ctx.bumps)
     }

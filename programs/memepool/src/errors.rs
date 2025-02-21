@@ -12,4 +12,6 @@ pub enum VaultError {
     VaultOOS,
     #[msg("Withdraw Request status not ready")]
     WithdrawRequestNotReady,
+    #[msg("Withdraw Request status ready")]
+    WithdrawRequestReady,
 }
