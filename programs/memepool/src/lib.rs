@@ -30,11 +30,6 @@ Aggregator world
  - harvest lp
  - withdraw 
 
- TODO: 
- Change naming conventions
- deposit_lp -> lp_deposit 
- etc.
-
 */
 
 #[program]
