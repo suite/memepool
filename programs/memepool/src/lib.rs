@@ -1,6 +1,6 @@
 use anchor_lang::prelude::*;
 
-declare_id!("4eis4y3ejgjeLypXTYSCxGnqNcsHYbp3hCboThgEvtUP");
+declare_id!("F2f16ivA9a7BwLA6hmLcny2fD15XDToBnpxERVNdtwSy");
 
 mod state;
 mod contexts;
@@ -30,6 +30,15 @@ Aggregator world
  - harvest lp
  - withdraw 
 
+
+ UI
+ -deposit, withdraw
+
+ agg bot
+ - deposit into lps
+ - scan for withdraws
+
+ TODO: remove .as_ref() for string seeds
 */
 
 #[program]

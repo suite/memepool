@@ -11,7 +11,7 @@ pub struct VaultInitialize<'info> {
     #[account(
         init,
         payer=admin,
-        seeds=[b"vault".as_ref()],
+        seeds=[b"vault"],
         bump,
         space=8+Vault::INIT_SPACE,
     )]
@@ -23,7 +23,7 @@ pub struct VaultInitialize<'info> {
     #[account(
         init_if_needed,
         payer=admin,
-        seeds=[b"meme".as_ref()], // Do I really need to pass in vault.key().as_ref() here? (omitted for now)
+        seeds=[b"meme"], // Do I really need to pass in vault.key().as_ref() here? (omitted for now)
         bump,
         mint::decimals=9,
         mint::authority=vault,

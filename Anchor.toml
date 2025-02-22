@@ -5,7 +5,7 @@ resolution = true
 skip-lint = false
 
 [programs.devnet]
-memepool = "4eis4y3ejgjeLypXTYSCxGnqNcsHYbp3hCboThgEvtUP"
+memepool = "F2f16ivA9a7BwLA6hmLcny2fD15XDToBnpxERVNdtwSy"
 
 [registry]
 url = "https://api.apr.dev"

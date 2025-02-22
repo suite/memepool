@@ -10,14 +10,14 @@ pub struct VaultDeposit<'info> {
 
     #[account(
         mut,
-        seeds=[b"vault".as_ref()],
+        seeds=[b"vault"],
         bump=vault.bump,
     )]
     pub vault: Account<'info, Vault>,
 
     #[account(
         mut,
-        seeds=[b"meme".as_ref()],
+        seeds=[b"meme"],
         bump=vault.meme_bump,
     )]
     pub meme_mint: Account<'info, Mint>,

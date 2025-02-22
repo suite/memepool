@@ -79,6 +79,8 @@ describe("memepool", () => {
     //  Get new Withdraw Request account
     const withdrawRequest = getWithdrawRequestAccount(provider.wallet.publicKey, counter, program.programId);
     
+    const withdrawRequestMemeAta = getAssociatedTokenAddressSync(memeMint, withdrawRequest, true);
+
     const tx = await program.methods.vaultRequestWithdraw(withdraw)
       .accountsPartial({
         withdrawer: provider.wallet.publicKey,
@@ -87,8 +89,10 @@ describe("memepool", () => {
         withdrawerMemeAta,
         portfolio,
         withdrawRequest,
+        withdrawRequestMemeAta,
         systemProgram: anchor.web3.SystemProgram.programId,
         tokenProgram: TOKEN_PROGRAM_ID,
+        associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
       }).rpc();
 
       console.log("Created withdraw request.");
@@ -105,13 +109,18 @@ describe("memepool", () => {
     //  Get recent Withdraw Request account
     const withdrawRequest = getWithdrawRequestAccount(provider.wallet.publicKey, counter.subn(1), program.programId);
 
+    const withdrawRequestMemeAta = getAssociatedTokenAddressSync(memeMint, withdrawRequest, true);
+
     const tx = await program.methods.vaultFillWithdraw(fill)
       .accountsPartial({
         aggregator: secondaryKp.publicKey,
         withdrawer: provider.wallet.publicKey,
         withdrawRequest,
         vault,
+        memeMint,
+        withdrawRequestMemeAta,
         systemProgram: anchor.web3.SystemProgram.programId,
+        tokenProgram: TOKEN_PROGRAM_ID,
       }).signers([secondaryKp]).rpc();
 
       console.log("Filled withdraw request.");
@@ -126,11 +135,17 @@ describe("memepool", () => {
     //  Get recent Withdraw Request account
     const withdrawRequest = getWithdrawRequestAccount(provider.wallet.publicKey, counter.subn(1), program.programId);
 
+    const withdrawRequestMemeAta = getAssociatedTokenAddressSync(memeMint, withdrawRequest, true);
+
     const tx = await program.methods.vaultFinalizeWithdraw()
       .accountsPartial({
         withdrawer: provider.wallet.publicKey,
         withdrawRequest,
+        memeMint,
+        vault,
+        withdrawRequestMemeAta,
         systemProgram: anchor.web3.SystemProgram.programId,
+        tokenProgram: TOKEN_PROGRAM_ID,
       }).rpc();
 
       console.log("Finalized withdraw request.");
