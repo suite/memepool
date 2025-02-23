@@ -1,5 +1,13 @@
 # Memepool
 
+## Project Components
+
+Memepool is composed of the following repositories:
+
+- **[memepool](https://github.com/suite/memepool)** - Core smart contract and logic for the Memepool project (this repo).
+- **[memepool-aggregator](https://github.com/suite/memepool-aggregator)** - The bot responsible for fulfilling withdrawal requests and managing liquidity pool positions.
+- **[memepool-ui](https://github.com/suite/memepool-ui)** - The front-end UI for interacting with Memepool.
+
 # Project Overview
 
 ## Capstone Project Name/Idea:
