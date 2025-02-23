@@ -42,6 +42,10 @@ export const POOL_LPMINT_SEED = Buffer.from(
     anchor.utils.bytes.utf8.encode("pool_lp_mint")
 );
 
+export const ORACLE_SEED = Buffer.from(
+  anchor.utils.bytes.utf8.encode("observation")
+);
+
 export function getPoolAddress(
   ammConfig: PublicKey,
   tokenMint0: PublicKey,
@@ -76,6 +80,17 @@ export function getPoolLpMintAddress(
 ): [PublicKey, number] {
   const [address, bump] = PublicKey.findProgramAddressSync(
     [POOL_LPMINT_SEED, pool.toBuffer()],
+    programId
+  );
+  return [address, bump];
+}
+
+export function getOrcleAccountAddress(
+  pool: PublicKey,
+  programId: PublicKey
+): [PublicKey, number] {
+  const [address, bump] = PublicKey.findProgramAddressSync(
+    [ORACLE_SEED, pool.toBuffer()],
     programId
   );
   return [address, bump];

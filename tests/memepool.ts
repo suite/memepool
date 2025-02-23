@@ -5,7 +5,7 @@ import { ASSOCIATED_PROGRAM_ID, TOKEN_PROGRAM_ID } from "@coral-xyz/anchor/dist/
 import { ASSOCIATED_TOKEN_PROGRAM_ID, getAssociatedTokenAddressSync, TOKEN_2022_PROGRAM_ID } from "@solana/spl-token";
 import * as fs from "fs";
 import { PublicKey } from "@solana/web3.js";
-import { getAuthAddress, getPoolLpMintAddress, initSdk, txVersion } from "./raydium/config";
+import { getAuthAddress, getOrcleAccountAddress, getPoolLpMintAddress, initSdk, txVersion } from "./raydium/config";
 import { DEVNET_PROGRAM_ID, getCpmmPdaAmmConfigId } from "@raydium-io/raydium-sdk-v2";
 import { getPortfolioAccount, getPortfolioCounter, getWithdrawRequestAccount } from "./utils/portfolio";
 
@@ -29,6 +29,8 @@ describe("memepool", () => {
   const memeMint = anchor.web3.PublicKey.findProgramAddressSync([Buffer.from("meme")], program.programId)[0];
   
   const cpSwapProgram = new PublicKey("CPMDWBwJDtYax9qW7AyRuVC19Cc4L4Vcy4n2BHAbHkCW");
+  const wrappedSOL = new PublicKey("So11111111111111111111111111111111111111112");
+  const testToken = new PublicKey("DcPRHwtoWCtzt8WwtD7VdMHvMLtHya7WPknH6kmUsUbw");
 
   console.log("Vault pda:", vault.toString());
   console.log("$MEME mint:", memeMint.toString());
@@ -218,6 +220,49 @@ describe("memepool", () => {
       .rpc();
       
       console.log("Called DepositLp. new");
+      console.log("Your transaction signature", tx);
+  });
+
+  it("Swaps tokens using test LP", async () => {
+    const poolAddress = new PublicKey("2zQi1M8QrJpXxLWNyBuec3N7hNG1x7DmChctYYeE5HLT");
+    const [authority] = getAuthAddress(cpSwapProgram); // CONSTANT FOR ALL POOLS
+
+    const raydium = await initSdk({ loadToken: true });
+    const poolInfo = await raydium.cpmm.getRpcPoolInfo(poolAddress.toString());
+
+    const inputTokenAccount = getAssociatedTokenAddressSync(wrappedSOL, vault, true);
+    const outputTokenAccount = getAssociatedTokenAddressSync(testToken, vault, true);
+
+    const [observationAddress] = getOrcleAccountAddress(
+      poolAddress,
+      cpSwapProgram
+    );
+    
+    const amountIn = new BN(10);
+    const minimumAmountOut = new BN(8);
+
+    const tx = await program.methods.lpSwap(amountIn, minimumAmountOut)
+      .accountsPartial({
+        vault,
+        aggregator: secondaryKp.publicKey,
+        cpSwapProgram,
+        authority,
+        ammConfig: poolInfo.configId,
+        poolState: poolAddress,
+        inputTokenAccount,
+        outputTokenAccount,
+        inputVault: poolInfo.vaultA,
+        outputVault: poolInfo.vaultB,
+        inputTokenProgram: TOKEN_PROGRAM_ID,
+        outputTokenProgram: TOKEN_PROGRAM_ID,
+        inputTokenMint: wrappedSOL,
+        outputTokenMint: testToken,
+        observationState: observationAddress
+      })
+      .signers([secondaryKp])
+      .rpc();
+
+      console.log("Swapped tokens");
       console.log("Your transaction signature", tx);
   });
 

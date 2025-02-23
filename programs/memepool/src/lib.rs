@@ -68,4 +68,8 @@ pub mod memepool {
     pub fn lp_deposit(ctx: Context<LpDeposit>,  lp_token_amount: u64, maximum_token_0_amount: u64, maximum_token_1_amount: u64) -> Result<()> {
         ctx.accounts.lp_deposit(lp_token_amount, maximum_token_0_amount, maximum_token_1_amount, &ctx.bumps)
     }
+
+    pub fn lp_swap(ctx: Context<LpSwap>, amount_in: u64, minimum_amount_out: u64) -> Result<()> {
+        ctx.accounts.lp_swap(amount_in, minimum_amount_out)
+    }
 }
