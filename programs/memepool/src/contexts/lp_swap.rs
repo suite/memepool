@@ -109,6 +109,8 @@ impl<'info> LpSwap<'info> {
         let cpi_context = CpiContext::new_with_signer(cpi_program, cpi_accounts, signer_seeds);
         cpi::swap_base_input(cpi_context, amount_in, minimum_amount_out)?;
 
+        // TODO: We can close ATA for input_token_account here eventually..
+
         Ok(())
     }
 }
