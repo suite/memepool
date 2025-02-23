@@ -95,3 +95,10 @@ export function getOrcleAccountAddress(
   );
   return [address, bump];
 }
+
+// This is our programs vault pool to keep track of pool positions
+export const getVaultPoolAccount = (poolState: PublicKey, programId: PublicKey) => {
+    return anchor.web3.PublicKey.findProgramAddressSync([
+            Buffer.from("vault_pool"), poolState.toBuffer()], 
+            programId)[0];
+}

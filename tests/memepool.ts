@@ -5,8 +5,8 @@ import { ASSOCIATED_PROGRAM_ID, TOKEN_PROGRAM_ID } from "@coral-xyz/anchor/dist/
 import { ASSOCIATED_TOKEN_PROGRAM_ID, getAssociatedTokenAddressSync, TOKEN_2022_PROGRAM_ID } from "@solana/spl-token";
 import * as fs from "fs";
 import { PublicKey } from "@solana/web3.js";
-import { getAuthAddress, getOrcleAccountAddress, getPoolLpMintAddress, initSdk, txVersion } from "./raydium/config";
-import { DEVNET_PROGRAM_ID, getCpmmPdaAmmConfigId } from "@raydium-io/raydium-sdk-v2";
+import { getAuthAddress, getOrcleAccountAddress, getPoolLpMintAddress, getVaultPoolAccount, initSdk, txVersion } from "./raydium/config";
+import { DEVNET_PROGRAM_ID, getCpmmPdaAmmConfigId, MEMO_PROGRAM_ID, MEMO_PROGRAM_ID2 } from "@raydium-io/raydium-sdk-v2";
 import { getPortfolioAccount, getPortfolioCounter, getWithdrawRequestAccount } from "./utils/portfolio";
 
 
@@ -170,6 +170,7 @@ describe("memepool", () => {
     const poolInfo = await raydium.cpmm.getRpcPoolInfo(poolAddress.toString());
 
     console.log("Pool info", poolInfo);
+    console.log("AB amount", poolInfo.vaultAAmount.toNumber(), poolInfo.vaultBAmount.toNumber())
 
     const lpTokenAmount = new BN(10);
     const maximumToken0Amount = new BN(10);
@@ -205,8 +206,11 @@ describe("memepool", () => {
       poolInfo.mintProgramB
     );
 
+    const vaultPool = getVaultPoolAccount(poolAddress, program.programId);
+
     const tx = await program.methods.lpDeposit(lpTokenAmount, maximumToken0Amount, maximumToken1Amount)
       .accountsPartial({
+        vaultPool,
         vault,
         aggregator: secondaryKp.publicKey,
         cpSwapProgram,
@@ -272,6 +276,77 @@ describe("memepool", () => {
       .rpc();
 
       console.log("Swapped tokens");
+      console.log("Your transaction signature", tx);
+  });
+
+  it("Withdraws from LP", async () => {
+    const lpTokenAmount = new BN(10);
+    const maximumToken0Amount = new BN(9);
+    const maximumToken1Amount = new BN(8);
+
+    const [authority] = getAuthAddress(cpSwapProgram);
+
+    const poolAddress = new PublicKey("2zQi1M8QrJpXxLWNyBuec3N7hNG1x7DmChctYYeE5HLT");
+    const raydium = await initSdk({ loadToken: true });
+    const poolInfo = await raydium.cpmm.getRpcPoolInfo(poolAddress.toString());
+
+    console.log(poolInfo);
+    console.log("AB amount", poolInfo.vaultAAmount.toNumber(), poolInfo.vaultBAmount.toNumber())
+
+    const vaultPool = getVaultPoolAccount(poolAddress, program.programId);
+
+    const [lpMintAddress] = getPoolLpMintAddress(
+      poolAddress,
+      cpSwapProgram
+    );
+
+    const [ownerLpToken] = PublicKey.findProgramAddressSync(
+      [
+        vault.toBuffer(),
+        TOKEN_PROGRAM_ID.toBuffer(),
+        lpMintAddress.toBuffer(),
+      ],
+      ASSOCIATED_PROGRAM_ID
+    );
+
+    const ownerToken0 = getAssociatedTokenAddressSync(
+      poolInfo.mintA,
+      vault,
+      true,
+      poolInfo.mintProgramA
+    );
+
+    const ownerToken1 = getAssociatedTokenAddressSync(
+      poolInfo.mintB,
+      vault,
+      true,
+      poolInfo.mintProgramB
+    );
+
+    const tx = await program.methods.lpWithdraw(lpTokenAmount, maximumToken0Amount, maximumToken1Amount)
+      .accountsPartial({
+        vaultPool,
+        vault,
+        aggregator: secondaryKp.publicKey,
+        cpSwapProgram,
+        authority,
+        poolState: poolAddress,
+        ownerLpToken,
+        token0Account: ownerToken0,
+        token1Account: ownerToken1,
+        token0Vault: poolInfo.vaultA,
+        token1Vault: poolInfo.vaultB,
+        tokenProgram: TOKEN_PROGRAM_ID,
+        tokenProgram2022: TOKEN_2022_PROGRAM_ID,
+        vault0Mint: poolInfo.mintA,
+        vault1Mint: poolInfo.mintB,
+        lpMint: poolInfo.mintLp,
+        memoProgram: MEMO_PROGRAM_ID,
+      })
+      .signers([secondaryKp])
+      .rpc();
+
+      console.log("Withdrew from LP");
       console.log("Your transaction signature", tx);
   });
 

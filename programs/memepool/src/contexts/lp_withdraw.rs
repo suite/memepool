@@ -109,7 +109,7 @@ pub struct LpWithdraw<'info> {
 }
 
 impl<'info> LpWithdraw<'info> {
-    pub fn withdraw_lp(&self, lp_token_amount: u64, minimum_token_0_amount: u64, minimum_token_1_amount: u64) -> Result<()> {
+    pub fn lp_withdraw(&self, lp_token_amount: u64, minimum_token_0_amount: u64, minimum_token_1_amount: u64) -> Result<()> {
         // TODO: close vault pool account eventually..
         let cpi_program = self.cp_swap_program.to_account_info();
         let cpi_accounts = cpi::accounts::Withdraw {
