@@ -1,5 +1,5 @@
 use anchor_lang::{prelude::*, system_program::{self, Transfer}};
-use anchor_spl::{associated_token::AssociatedToken, token::{mint_to, Mint, MintTo, Token, TokenAccount}};
+use anchor_spl::{associated_token::AssociatedToken, token::{self, mint_to, Mint, MintTo, Token, TokenAccount}};
 
 use crate::{state::Vault, utils::calculate_meme_from_sol};
 
@@ -22,6 +22,8 @@ pub struct VaultDeposit<'info> {
     )]
     pub meme_mint: Account<'info, Mint>,
 
+    pub wsol_mint: Account<'info, Mint>,
+
     #[account(
         init_if_needed,
         payer = depositer,
@@ -29,6 +31,14 @@ pub struct VaultDeposit<'info> {
         associated_token::authority = depositer,
     )]
     pub depositer_meme_ata: Account<'info, TokenAccount>,
+
+    #[account(
+        init_if_needed,
+        payer = depositer,
+        associated_token::mint = wsol_mint,
+        associated_token::authority = vault,
+    )]
+    pub vault_wsol_ata: Account<'info, TokenAccount>,
 
     pub system_program: Program<'info, System>,
     pub token_program: Program<'info, Token>,
@@ -43,14 +53,22 @@ impl<'info> VaultDeposit<'info> {
         let vault_lamports = self.vault.lamports;
         let meme_amt = calculate_meme_from_sol(deposit_lamports, meme_supply, vault_lamports)?;
 
-        // Transfer SOL from user to vault
+        // Transfer SOL from user to vault's WSOL account
         let cpi_program = self.system_program.to_account_info();
         let cpi_accounts = Transfer {
             from: self.depositer.to_account_info(),
-            to: self.vault.to_account_info(),
+            to: self.vault_wsol_ata.to_account_info(),
         };
         let cpi_ctx = CpiContext::new(cpi_program, cpi_accounts);
         system_program::transfer(cpi_ctx, deposit_lamports)?;
+
+        // Sync the native token to reflect the new SOL balance as wSOL 
+        let cpi_program = self.token_program.to_account_info();
+        let cpi_accounts = token::SyncNative {
+            account: self.vault_wsol_ata.to_account_info(),
+        };
+        let cpi_ctx = CpiContext::new(cpi_program, cpi_accounts);
+        token::sync_native(cpi_ctx)?;
 
         // Update vault.lamport_value
         self.vault.lamports += deposit_lamports;

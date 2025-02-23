@@ -1,5 +1,5 @@
 use anchor_lang::prelude::*;
-use anchor_spl::token::{burn, Burn, Mint, Token, TokenAccount};
+use anchor_spl::{associated_token::AssociatedToken, token::{burn, close_account, transfer, Burn, CloseAccount, Mint, Token, TokenAccount, Transfer}};
 
 use crate::{constants::AGGREGATOR_BOT, errors::VaultError, state::{Vault, WithdrawRequest}};
 
@@ -27,6 +27,23 @@ pub struct VaultFillWithdraw<'info> {
         associated_token::authority = withdraw_request,
     )]
     pub withdraw_request_meme_ata: Box<Account<'info, TokenAccount>>,
+
+    #[account(
+        mut,
+        associated_token::mint = wsol_mint,
+        associated_token::authority = vault,
+    )]
+    pub vault_wsol_ata: Account<'info, TokenAccount>,
+
+    // We need a temporary wsol ata to only swap specific amount of WSOL into SOL
+    // We use withdraw_request as a "temp" authority, we will close this in the same request
+    #[account(
+        init,
+        payer = aggregator,
+        associated_token::mint = wsol_mint,
+        associated_token::authority = withdraw_request,
+    )]
+    pub temp_vault_wsol_ata: Account<'info, TokenAccount>,
     
     #[account(
         mut,
@@ -42,8 +59,11 @@ pub struct VaultFillWithdraw<'info> {
     )]
     pub meme_mint: Box<Account<'info, Mint>>,
 
+    pub wsol_mint: Account<'info, Mint>,
+
     pub token_program: Program<'info, Token>,
     pub system_program: Program<'info, System>,
+    pub associated_token_program: Program<'info, AssociatedToken>,
 }
 
 impl<'info> VaultFillWithdraw<'info> {
@@ -70,6 +90,39 @@ impl<'info> VaultFillWithdraw<'info> {
         let signer_seeds = &[&seeds[..]];
         let cpi_ctx = CpiContext::new_with_signer(cpi_program, cpi_accounts, signer_seeds);
         burn(cpi_ctx, self.withdraw_request.meme_amt)?;
+
+        // Unwrap WSOL
+        // 1. Transfer SOL from vault to temp WSOL account
+        let cpi_program = self.token_program.to_account_info();
+        let cpi_accounts = Transfer {
+            from: self.vault_wsol_ata.to_account_info(),
+            to: self.temp_vault_wsol_ata.to_account_info(),
+            authority: self.vault.to_account_info(),
+        };
+        let seeds = &[
+            b"vault".as_ref(),
+            &[self.vault.bump],
+        ];
+        let signer_seeds = &[&seeds[..]];
+        let cpi_ctx = CpiContext::new_with_signer(cpi_program, cpi_accounts, signer_seeds);
+        transfer(cpi_ctx, fill_lamports)?;
+        
+        // 2. Close account into vault to retrieve SOL
+        let cpi_program = self.token_program.to_account_info();
+        let cpi_accounts = CloseAccount {
+            account: self.temp_vault_wsol_ata.to_account_info(),
+            destination: self.vault.to_account_info(),
+            authority: self.withdraw_request.to_account_info(),
+        };
+        let seeds = &[
+            b"withdraw_request",
+            self.withdrawer.to_account_info().key.as_ref(),
+            &self.withdraw_request.count.to_le_bytes(),
+            &[self.withdraw_request.bump],
+        ];
+        let signer_seeds = &[&seeds[..]];
+        let cpi_ctx = CpiContext::new_with_signer(cpi_program, cpi_accounts, signer_seeds);
+        close_account(cpi_ctx)?;
 
         // NOTE: THIS MUST BE THE LAST TRANSACTION
         // Transfer $SOL from vault to withdraw request account
