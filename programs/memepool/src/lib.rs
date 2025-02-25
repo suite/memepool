@@ -69,8 +69,8 @@ pub mod memepool {
         ctx.accounts.lp_deposit(lp_token_amount, maximum_token_0_amount, maximum_token_1_amount, &ctx.bumps)
     }
 
-    pub fn lp_withdraw(ctx: Context<LpWithdraw>,  lp_token_amount: u64, maximum_token_0_amount: u64, maximum_token_1_amount: u64) -> Result<()> {
-        ctx.accounts.lp_withdraw(lp_token_amount, maximum_token_0_amount, maximum_token_1_amount)
+    pub fn lp_withdraw(ctx: Context<LpWithdraw>,  lp_token_amount: u64, minimum_token_0_amount: u64, minimum_token_1_amount: u64) -> Result<()> {
+        ctx.accounts.lp_withdraw(lp_token_amount, minimum_token_0_amount, minimum_token_1_amount)
     }
 
     pub fn lp_swap(ctx: Context<LpSwap>, amount_in: u64, minimum_amount_out: u64) -> Result<()> {
