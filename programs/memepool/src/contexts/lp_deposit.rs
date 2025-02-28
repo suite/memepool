@@ -145,13 +145,12 @@ impl<'info> LpDeposit<'info> {
         let cpi_context = CpiContext::new_with_signer(cpi_program, cpi_accounts,signer_seeds);
         cpi::deposit(cpi_context, lp_token_amount, maximum_token_0_amount, maximum_token_1_amount)?;
 
-        // Keep track of pool, only set once TODO: make sure this is safe
-        if self.vault_pool.to_account_info().data_is_empty() {
-            self.vault_pool.set_inner(VaultPool {
-                bump: bumps.vault_pool,
-                pool_id: self.pool_state.key(),
-            });
-        }
+        // Keep track of pool
+        // TODO: Don't do this every time
+        self.vault_pool.set_inner(VaultPool {
+            bump: bumps.vault_pool,
+            pool_id: self.pool_state.key(),
+        });
         
         Ok(())
     }
