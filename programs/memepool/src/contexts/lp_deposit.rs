@@ -118,7 +118,7 @@ pub struct LpDeposit<'info> {
 
 
 impl<'info> LpDeposit<'info> {
-    pub fn lp_deposit(&mut self, lp_token_amount: u64, maximum_token_0_amount: u64, maximum_token_1_amount: u64, bumps: &LpDepositBumps) -> Result<()> {
+    pub fn lp_deposit(&mut self, lp_token_amount: u64, maximum_token_0_amount: u64, maximum_token_1_amount: u64, bumps: &LpDepositBumps, deposit_value: u64) -> Result<()> {
         let cpi_program = self.cp_swap_program.to_account_info();
         let cpi_accounts = cpi::accounts::Deposit {
             owner: self.vault.to_account_info(), // must be signer?
@@ -144,6 +144,9 @@ impl<'info> LpDeposit<'info> {
 
         let cpi_context = CpiContext::new_with_signer(cpi_program, cpi_accounts,signer_seeds);
         cpi::deposit(cpi_context, lp_token_amount, maximum_token_0_amount, maximum_token_1_amount)?;
+
+        // Update avail lamports
+        self.vault.available_lamports -= deposit_value;
 
         // Keep track of pool
         // TODO: Don't do this every time

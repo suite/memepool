@@ -131,6 +131,7 @@ impl<'info> VaultFillWithdraw<'info> {
 
         // Update vault.lamport_value
         self.vault.lamports -= fill_lamports;
+        self.vault.available_lamports -= fill_lamports;
 
         // Set withdraw request status to ready
         self.withdraw_request.status = 1;

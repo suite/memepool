@@ -72,6 +72,7 @@ impl<'info> VaultDeposit<'info> {
 
         // Update vault.lamport_value
         self.vault.lamports += deposit_lamports;
+        self.vault.available_lamports += deposit_lamports;
 
         // Mint $MEME
         let cpi_program = self.token_program.to_account_info();

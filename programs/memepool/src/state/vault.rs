@@ -13,4 +13,5 @@ pub struct Vault {
     pub meme_bump: u8,
     pub bump: u8,
     pub lamports: u64,
+    pub available_lamports: u64,
 }

@@ -39,7 +39,8 @@ impl<'info> VaultInitialize<'info> {
         self.vault.set_inner(Vault {
             meme_bump: bumps.meme_mint,
             bump: bumps.vault,
-            lamports: 0
+            lamports: 0,
+            available_lamports: 0,
         });
 
         Ok(())
