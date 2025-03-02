@@ -1,6 +1,12 @@
+use std::str::FromStr;
+
 use anchor_lang::prelude::*;
 use anchor_spl::token_interface::{Mint, TokenAccount, TokenInterface};
-use raydium_cpmm_cpi::{cpi, program::RaydiumCpmm, states::{AmmConfig, ObservationState, PoolState}};
+use raydium_cpmm_cpi::{
+    cpi,
+    program::RaydiumCpmm,
+    states::{AmmConfig, ObservationState, PoolState},
+};
 
 use crate::{constants::AGGREGATOR_BOT, state::Vault};
 
@@ -9,7 +15,7 @@ pub struct LpSwap<'info> {
     // Aggregator signer
     #[account(mut, address=AGGREGATOR_BOT)]
     pub aggregator: Signer<'info>,
-    
+
     #[account(
         mut,
         seeds=[b"vault".as_ref()],
@@ -29,11 +35,11 @@ pub struct LpSwap<'info> {
     )]
     pub authority: UncheckedAccount<'info>,
 
-     /// The factory state to read protocol fees
-     #[account(address = pool_state.load()?.amm_config)]
-     pub amm_config: Box<Account<'info, AmmConfig>>,
+    /// The factory state to read protocol fees
+    #[account(address = pool_state.load()?.amm_config)]
+    pub amm_config: Box<Account<'info, AmmConfig>>,
 
-     /// The program account of the pool in which the swap will be performed
+    /// The program account of the pool in which the swap will be performed
     #[account(mut)]
     pub pool_state: AccountLoader<'info, PoolState>,
 
@@ -82,7 +88,19 @@ pub struct LpSwap<'info> {
 }
 
 impl<'info> LpSwap<'info> {
-    pub fn lp_swap(&self, amount_in: u64, minimum_amount_out: u64) -> Result<()> {
+    pub fn lp_swap(&mut self, amount_in: u64, minimum_amount_out: u64) -> Result<()> {
+        let wsol_mint = Pubkey::from_str("So11111111111111111111111111111111111111112").unwrap();
+
+        if self.input_token_mint.key() == wsol_mint {
+            self.vault.available_lamports = self.vault.available_lamports.saturating_sub(amount_in);
+        }
+
+        let initial_output_balance = if self.output_token_mint.key() == wsol_mint {
+            Some(self.output_token_account.amount)
+        } else {
+            None
+        };
+
         let cpi_program = self.cp_swap_program.to_account_info();
         let cpi_accounts = cpi::accounts::Swap {
             payer: self.vault.to_account_info(),
@@ -100,14 +118,19 @@ impl<'info> LpSwap<'info> {
             observation_state: self.observation_state.to_account_info(),
         };
 
-        let seeds = &[
-            b"vault".as_ref(),
-            &[self.vault.bump],
-        ];
+        let seeds = &[b"vault".as_ref(), &[self.vault.bump]];
         let signer_seeds = &[&seeds[..]];
 
         let cpi_context = CpiContext::new_with_signer(cpi_program, cpi_accounts, signer_seeds);
         cpi::swap_base_input(cpi_context, amount_in, minimum_amount_out)?;
+
+        if let Some(initial_balance) = initial_output_balance {
+            self.output_token_account.reload()?;
+            let final_balance = self.output_token_account.amount;
+            let wsol_received = final_balance.saturating_sub(initial_balance);
+            self.vault.available_lamports =
+                self.vault.available_lamports.saturating_add(wsol_received);
+        }
 
         // TODO: We can close ATA for input_token_account here eventually..
 

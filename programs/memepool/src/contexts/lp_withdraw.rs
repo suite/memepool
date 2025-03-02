@@ -109,7 +109,9 @@ pub struct LpWithdraw<'info> {
 }
 
 impl<'info> LpWithdraw<'info> {
-    pub fn lp_withdraw(&mut self, lp_token_amount: u64, minimum_token_0_amount: u64, minimum_token_1_amount: u64, withdraw_value: u64) -> Result<()> {
+    pub fn lp_withdraw(&mut self, lp_token_amount: u64, minimum_token_0_amount: u64, minimum_token_1_amount: u64) -> Result<()> {
+        let initial_wsol_balance = self.token_0_account.amount;
+
         // TODO: close vault pool account eventually..
         let cpi_program = self.cp_swap_program.to_account_info();
         let cpi_accounts = cpi::accounts::Withdraw {
@@ -139,7 +141,13 @@ impl<'info> LpWithdraw<'info> {
         cpi::withdraw(cpi_context, lp_token_amount, minimum_token_0_amount, minimum_token_1_amount)?;
 
         // Update avail lamports
-        self.vault.available_lamports += withdraw_value;
+        self.token_0_account.reload()?;
+        let final_wsol_balance = self.token_0_account.amount;
+
+        self.vault.available_lamports = self
+            .vault
+            .available_lamports
+            .saturating_add(final_wsol_balance.saturating_sub(initial_wsol_balance));
 
         Ok(())
     }

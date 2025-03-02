@@ -1,45 +1,14 @@
 use anchor_lang::prelude::*;
 
-declare_id!("2FFxe3uuZcEoKEdtotrANZmYQZxiaqAoZC6afxYFTWoz");
+declare_id!("CNjsRqZKwi66nVBRcgpQVzHBwFBemoboTQj97TFuJRQY");
 
-mod state;
+pub mod constants;
 mod contexts;
 pub mod errors;
+mod state;
 pub mod utils;
-pub mod constants;
 
 pub use contexts::*;
-
-/*
-
-define struct
-implement easy to test methods
-
-Escrow/Vault world
- - deposit SOL
- - get MEME
-    - contexts
-    - 
-
-    init
-    deposit
-    withdraw
-
-Aggregator world
- - deposit into LP using vault funds
- - harvest lp
- - withdraw 
-
-
- UI
- -deposit, withdraw
-
- agg bot
- - deposit into lps
- - scan for withdraws
-
- TODO: remove .as_ref() for string seeds
-*/
 
 #[program]
 pub mod memepool {
@@ -65,12 +34,31 @@ pub mod memepool {
         ctx.accounts.vault_fill_withdraw(fill_lamports)
     }
 
-    pub fn lp_deposit(ctx: Context<LpDeposit>,  lp_token_amount: u64, maximum_token_0_amount: u64, maximum_token_1_amount: u64, deposit_value: u64) -> Result<()> {
-        ctx.accounts.lp_deposit(lp_token_amount, maximum_token_0_amount, maximum_token_1_amount, &ctx.bumps, deposit_value)
+    pub fn lp_deposit(
+        ctx: Context<LpDeposit>,
+        lp_token_amount: u64,
+        maximum_token_0_amount: u64,
+        maximum_token_1_amount: u64,
+    ) -> Result<()> {
+        ctx.accounts.lp_deposit(
+            lp_token_amount,
+            maximum_token_0_amount,
+            maximum_token_1_amount,
+            &ctx.bumps,
+        )
     }
 
-    pub fn lp_withdraw(ctx: Context<LpWithdraw>,  lp_token_amount: u64, minimum_token_0_amount: u64, minimum_token_1_amount: u64, withdraw_value: u64) -> Result<()> {
-        ctx.accounts.lp_withdraw(lp_token_amount, minimum_token_0_amount, minimum_token_1_amount, withdraw_value)
+    pub fn lp_withdraw(
+        ctx: Context<LpWithdraw>,
+        lp_token_amount: u64,
+        minimum_token_0_amount: u64,
+        minimum_token_1_amount: u64,
+    ) -> Result<()> {
+        ctx.accounts.lp_withdraw(
+            lp_token_amount,
+            minimum_token_0_amount,
+            minimum_token_1_amount,
+        )
     }
 
     pub fn lp_swap(ctx: Context<LpSwap>, amount_in: u64, minimum_amount_out: u64) -> Result<()> {

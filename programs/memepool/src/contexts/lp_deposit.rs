@@ -1,12 +1,18 @@
 use anchor_lang::prelude::*;
 use anchor_spl::{
-    associated_token::AssociatedToken, token::Token, token_2022::Token2022, token_interface::{Mint, TokenAccount}
+    associated_token::AssociatedToken,
+    token::Token,
+    token_2022::Token2022,
+    token_interface::{Mint, TokenAccount},
 };
 use raydium_cpmm_cpi::{cpi, program::RaydiumCpmm, states::PoolState};
 
-use crate::{constants::AGGREGATOR_BOT, state::{Vault, VaultPool}};
+use crate::{
+    constants::AGGREGATOR_BOT,
+    state::{Vault, VaultPool},
+};
 
-// 
+//
 // Deposit into LP for a given pair/raydium id
 // TX must be signed by aggregator bot
 //
@@ -116,9 +122,16 @@ pub struct LpDeposit<'info> {
     pub associated_token_program: Program<'info, AssociatedToken>,
 }
 
-
 impl<'info> LpDeposit<'info> {
-    pub fn lp_deposit(&mut self, lp_token_amount: u64, maximum_token_0_amount: u64, maximum_token_1_amount: u64, bumps: &LpDepositBumps, deposit_value: u64) -> Result<()> {
+    pub fn lp_deposit(
+        &mut self,
+        lp_token_amount: u64,
+        maximum_token_0_amount: u64,
+        maximum_token_1_amount: u64,
+        bumps: &LpDepositBumps,
+    ) -> Result<()> {
+        let initial_wsol_balance = self.token_0_account.amount;
+
         let cpi_program = self.cp_swap_program.to_account_info();
         let cpi_accounts = cpi::accounts::Deposit {
             owner: self.vault.to_account_info(), // must be signer?
@@ -136,17 +149,25 @@ impl<'info> LpDeposit<'info> {
             lp_mint: self.lp_mint.to_account_info(),
         };
 
-        let seeds = &[
-            b"vault".as_ref(),
-            &[self.vault.bump],
-        ];
+        let seeds = &[b"vault".as_ref(), &[self.vault.bump]];
         let signer_seeds = &[&seeds[..]];
 
-        let cpi_context = CpiContext::new_with_signer(cpi_program, cpi_accounts,signer_seeds);
-        cpi::deposit(cpi_context, lp_token_amount, maximum_token_0_amount, maximum_token_1_amount)?;
+        let cpi_context = CpiContext::new_with_signer(cpi_program, cpi_accounts, signer_seeds);
+        cpi::deposit(
+            cpi_context,
+            lp_token_amount,
+            maximum_token_0_amount,
+            maximum_token_1_amount,
+        )?;
 
         // Update avail lamports
-        self.vault.available_lamports -= deposit_value;
+        self.token_0_account.reload()?;
+        let final_wsol_balance = self.token_0_account.amount;
+
+        self.vault.available_lamports = self
+            .vault
+            .available_lamports
+            .saturating_sub(initial_wsol_balance.saturating_sub(final_wsol_balance));
 
         // Keep track of pool
         // TODO: Don't do this every time
@@ -154,7 +175,7 @@ impl<'info> LpDeposit<'info> {
             bump: bumps.vault_pool,
             pool_id: self.pool_state.key(),
         });
-        
+
         Ok(())
     }
 }
